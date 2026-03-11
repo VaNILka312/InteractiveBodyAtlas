@@ -274,89 +274,45 @@ export class AtlasSceneLibrary {
     return true;
   }
 
-  addToGroup(groupName, elementIdsOrNames) {
+  addToGroup(groupName, elementIdOrName) {
     const name = normalizeName(groupName);
     if (!name) return [];
     if (!this._manualGroupToIds.has(name)) this._manualGroupToIds.set(name, new Set());
     const set = this._manualGroupToIds.get(name);
 
-    const items = Array.isArray(elementIdsOrNames) ? elementIdsOrNames : [elementIdsOrNames];
     const added = [];
-    for (const item of items) {
-      for (const id of this._resolveToIds(item)) {
-        if (!set.has(id)) {
-          set.add(id);
-          added.push(id);
-        }
-        const groups = this._manualIdToGroups.get(id) || new Set();
-        groups.add(name);
-        this._manualIdToGroups.set(id, groups);
+    for (const id of this._resolveToIds(elementIdOrName)) {
+      if (!set.has(id)) {
+        set.add(id);
+        added.push(id);
       }
+      const groups = this._manualIdToGroups.get(id) || new Set();
+      groups.add(name);
+      this._manualIdToGroups.set(id, groups);
     }
     return added;
   }
 
-  removeFromGroup(groupName, elementIdsOrNames) {
+  removeFromGroup(groupName, elementIdOrName) {
     const name = normalizeName(groupName);
     if (!name) return [];
     const set = this._manualGroupToIds.get(name);
     if (!set) return [];
 
-    const items = Array.isArray(elementIdsOrNames) ? elementIdsOrNames : [elementIdsOrNames];
     const removed = [];
-    for (const item of items) {
-      for (const id of this._resolveToIds(item)) {
-        if (set.has(id)) {
-          set.delete(id);
-          removed.push(id);
-        }
-        const groups = this._manualIdToGroups.get(id);
-        if (groups) {
-          groups.delete(name);
-          if (!groups.size) this._manualIdToGroups.delete(id);
-          else this._manualIdToGroups.set(id, groups);
-        }
+    for (const id of this._resolveToIds(elementIdOrName)) {
+      if (set.has(id)) {
+        set.delete(id);
+        removed.push(id);
+      }
+      const groups = this._manualIdToGroups.get(id);
+      if (groups) {
+        groups.delete(name);
+        if (!groups.size) this._manualIdToGroups.delete(id);
+        else this._manualIdToGroups.set(id, groups);
       }
     }
     return removed;
-  }
-
-  apply({
-    includeGroups = [],
-    excludeGroups = [],
-    includeElements = [],
-    excludeElements = [],
-    reset = true
-  } = {}) {
-    if (reset) this.hideAll();
-
-    const visible = new Set();
-    for (const g of includeGroups) {
-      const a = this._ruleGroupToIds.get(g);
-      const b = this._manualGroupToIds.get(g);
-      if (a) for (const id of a) visible.add(id);
-      if (b) for (const id of b) visible.add(id);
-    }
-    for (const e of includeElements) {
-      for (const id of this._resolveToIds(e)) visible.add(id);
-    }
-
-    for (const g of excludeGroups) {
-      const a = this._ruleGroupToIds.get(g);
-      const b = this._manualGroupToIds.get(g);
-      if (a) for (const id of a) visible.delete(id);
-      if (b) for (const id of b) visible.delete(id);
-    }
-    for (const e of excludeElements) {
-      for (const id of this._resolveToIds(e)) visible.delete(id);
-    }
-
-    for (const id of visible) {
-      const node = this._nodeById.get(id);
-      if (node) node.visible = true;
-    }
-
-    return Array.from(visible);
   }
 
   _resolveToIds(idOrName) {

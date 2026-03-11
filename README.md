@@ -1,111 +1,58 @@
 # InteractiveBodyAtlas
 
-## Запуск
+Небольшой viewer на Three.js + “библиотека” управления видимостью элементов модели.
 
-Нужно открыть проект через HTTP-сервер (GLB нельзя корректно загрузить просто двойным кликом по `index.html`).
+- Модель (`.glb`) загружается один раз
+- По умолчанию **всё скрыто**
+- “Добавить/удалить объект” = показать/скрыть (через `visible`)
+- Доступ к API из консоли: `window.Atlas`
 
-Важно: в Windows `python -m http.server` иногда отдаёт `.js` как `text/plain`, и браузер блокирует ES-модули. Поэтому используйте `server.py` из этого репозитория.
+## Быстрый старт
 
-Пример:
+1) Запустите сервер из корня проекта:
 
 ```bash
 python server.py
 ```
 
-Откройте `http://127.0.0.1:5173/`.
+2) Откройте `http://127.0.0.1:5173/`
 
-## API библиотеки сцены
+3) Дождитесь текста `Ready. All hidden by default.`
 
-После загрузки страницы экземпляр библиотеки доступен как `window.Atlas`.
+## API (то, что пишет конечный пользователь)
 
-Состояние по умолчанию: **все элементы скрыты**.
+Экземпляр доступен как `window.Atlas`.
 
-### Основные функции (то, что пишет конечный пользователь)
+### Видимость (показать/скрыть)
 
 ```js
-Atlas.showElement('SomeMeshName')
-Atlas.hideElement('SomeMeshName')
+Atlas.hideAll()
+Atlas.showAll()
 
 Atlas.showGroup('bones')
 Atlas.hideGroup('bones')
 
-Atlas.hideAll()
-Atlas.showAll()
-
-Atlas.apply({
-  includeGroups: ['bones', 'muscles'],
-  excludeGroups: ['auxiliary'],
-  includeElements: [],
-  excludeElements: [],
-  reset: true
-})
+Atlas.showElement('Cube') // id или name из GLB
+Atlas.hideElement('Cube') // id или name из GLB
 ```
 
-### Как узнать, что доступно (группы/элементы)
+### Информация (что есть в сцене)
 
 ```js
 Atlas.getGroupNames()
 Atlas.getElementIds()
 Atlas.getElementIdsByName('ExactMeshName')
-Atlas.getManifest()
+Atlas.getManifest() // элементы + их группы
 ```
 
-### Команды для групп (создание/редактирование)
-
-Создать новую группу (пустую):
+### Группы в рантайме (ручные)
 
 ```js
 Atlas.createGroup('myGroup')
-```
-
-Добавить элементы в группу (по `id` или по `name` из GLB):
-
-```js
-Atlas.addToGroup('myGroup', 'Cube')
-Atlas.addToGroup('myGroup', ['Cube', 'Cone'])
-```
-
-Удалить элементы из группы:
-
-```js
-Atlas.removeFromGroup('myGroup', 'Cube')
-Atlas.removeFromGroup('myGroup', ['Cube', 'Cone'])
-```
-
-Посмотреть, кто входит в группу:
-
-```js
-Atlas.getGroupMembers('myGroup')
-```
-
-Удалить группу (удаляется только “ручная” группа, созданная через `createGroup`):
-
-```js
 Atlas.deleteGroup('myGroup')
-```
 
-## Типовые сценарии
+Atlas.addToGroup('myGroup', 'Cube')     // 1 элемент
+Atlas.removeFromGroup('myGroup', 'Cube') // 1 элемент
 
-### Показать несколько групп и “вычесть” одну группу
-
-```js
-Atlas.apply({
-  includeGroups: ['bones', 'muscles', 'nerves'],
-  excludeGroups: ['auxiliary'],
-  reset: true
-})
-```
-
-### Показать конкретный элемент по имени из GLB
-
-```js
-Atlas.showElement('Humerus_L')
-```
-
-Если в GLB несколько мешей с одинаковым `name`, `showElement('Name')` покажет все совпадения. Чтобы управлять ими поштучно, используйте `id` из `Atlas.getElementIds()` или `Atlas.getManifest()`.
-
-### Полностью сбросить видимость
-
-```js
-Atlas.hideAll()
+Atlas.getGroupMembers('myGroup')
 ```
